@@ -1,5 +1,10 @@
 # HorusEye
 ## Installation
+```
+conda create -n HorusEye python==3.10
+pip install pydicom==2.4.4
+conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+```
 
 ## Examples of CT denoising
 
@@ -9,6 +14,8 @@ The project is inspired by the following projects:
 - [RED CNN](https://github.com/SSinyu/RED-CNN)
 - [CT Former](https://github.com/wdayang/CTformer)
 - [MAP NN](https://github.com/hmshan/MAP-NN)
+
+We highly appreciate Dr. Jinwu ZHou and CHongxinan Pet Hospital, Hefei for providing the animal CT scans. We are grateful to the editors and the reviewers for their time and efforts spent on our paper. Their comments are very valuable for us to improve this work. We also thank the Computational Biological Research Center of KAUST for supporting the computational resources to run the experiments. We also thank Ana Bigio, scientific illustrator for helping us with the figure illustration.
 
 ## Public dataset for training and testing
 The public datasets used in this study are publicly available and can be accessed via their respective websites as follows.
