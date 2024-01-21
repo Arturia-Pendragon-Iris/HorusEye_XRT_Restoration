@@ -1,4 +1,6 @@
 # HorusEye
+This is the official repository of "HorusEye: Computed Tomography Denoising via Noise Learning"
+
 ## Installation
 ```
 conda create -n HorusEye python==3.10
@@ -13,7 +15,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvi
 ![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/sfig3.png)
 
 ## Clinical evaluation
-![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/sfig3.png)
+![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/fig5-1.png)
 
 ## Acknowledgement
 The project is inspired by the following projects:
