@@ -6,8 +6,14 @@ pip install pydicom==2.4.4
 conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
 ```
 
-## Examples of CT denoising
+## HorusEye schematic and performance evaluation on dose-comparison data
+![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/fig1-3.png)
 
+## Examples of CT denoising
+![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/sfig3.png)
+
+## Clinical evaluation
+![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/sfig3.png)
 
 ## Acknowledgement
 The project is inspired by the following projects:
