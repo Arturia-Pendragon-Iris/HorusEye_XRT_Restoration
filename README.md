@@ -17,6 +17,15 @@ conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvi
 ## Clinical evaluation
 ![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/fig5-1.png)
 
+## Temporary GUI for HorusEye denoising presentation
+Here we implement a temporary GUI for HorusEye. 
+'''
+http://0.0.0.0:5904
+'''
+Feel free to upload a .dcm file and see the denoising results. Here we provide three visualization CT windows, as lung window ([-1000, 600]), mediastinal window ([-200, 300]), and abdomen window ([-160, 240]). Additionally, we provide two checkpoints for the model, corresponding to different noise purification strategy. In our paper, the checkpoint "HorusEye_v10_02.pth" is used.
+
+Note: The GUI is established based on the KAUST Ibex server. If there is any problem with the GUI due to the disconnection with the Ibex server, please email yuetan.chu@kaust.edu.sa. We will try to reconnect to the server or open a new address for the GUI.
+
 ## Acknowledgement
 The project is inspired by the following projects:
 - [RED CNN](https://github.com/SSinyu/RED-CNN)
