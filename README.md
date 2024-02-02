@@ -20,7 +20,7 @@ conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvi
 ## Temporary GUI for HorusEye denoising presentation
 Here we implement a temporary GUI for HorusEye. 
 ```
-http://0.0.0.0:5904
+ https://b2b45c25a788f58728.gradio.live
 ```
 Feel free to upload a .dcm file and see the denoising results. Here we provide three visualization CT windows, as lung window ([-1000, 600]), the mediastinal window ([-200, 300]), and the abdomen window ([-160, 240]). Additionally, we provide two checkpoints for the model, corresponding to different noise purification strategies. In our paper, the checkpoint "HorusEye_v10_02.pth" is used.
 
