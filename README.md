@@ -22,7 +22,7 @@ Here we implement a temporary GUI for HorusEye.
 ```
 https://huggingface.co/spaces/Altoia/HorusEye
 ```
-Feel free to upload a .dcm file with 512×512 size and see the denoising results. Here we provide three visualization CT windows, as lung window ([-1000, 600]), the mediastinal window ([-200, 300]), and the abdomen window ([-160, 240]). Additionally, we provide two checkpoints for the model, corresponding to different noise purification strategies. In our paper, the checkpoint "HorusEye_v10_02.pth" is used.
+Feel free to upload a .dcm file with 512×512 size and see the denoising results. Here we provide three visualization CT windows, as lung window ([-1000, 600]), the mediastinal window ([-200, 300]), and the abdomen window ([-160, 240]).
 
 Note: The GUI is established based on the KAUST Ibex server. If there is any problem with the GUI due to the disconnection with the Ibex server, please email yuetan.chu@kaust.edu.sa. We will try to reconnect to the server or open a new address for the GUI.
 
