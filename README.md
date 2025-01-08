@@ -29,8 +29,7 @@ The project is inspired by the following projects:
 
 We highly appreciate Dr. Jinwu Zhou, Chongxinan Pet Hospital, and Anhong Pet Hospital, Hefei for providing the animal CT scans.
 
-## Public dataset for training and testing
-The public datasets used in this study are publicly available and can be accessed via their respective websites as follows.
+## Public medical CT
 - [PENET](https://github.com/marshuang80/PENet)
 - [RSNA-PE](https://www.rsna.org/rsnai/ai-image-challenge/rsna-pe-detection-challenge-2020)
 - [RAD chest](https://cvit.duke.edu/resource/rad-chestct-dataset/)
