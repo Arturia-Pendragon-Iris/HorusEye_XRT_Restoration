@@ -1,5 +1,5 @@
 # HorusEye
-This is the official repository of "HorusEye: Computed Tomography Denoising via Noise Learning"
+This is the official repository of "HorusEye: A self-supervised foundation model for generalizable X-ray tomography restoration"
 
 ## Installation
 ```
