@@ -4,8 +4,9 @@ This is the official repository of "HorusEye: A self-supervised foundation model
 ## Installation
 ```
 conda create -n HorusEye python==3.10
-pip install pydicom==2.4.4
 conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
+pip install pydicom==2.4.4
+pip install monai
 ```
 
 ## HorusEye schematic and performance evaluation on dose-comparison data
