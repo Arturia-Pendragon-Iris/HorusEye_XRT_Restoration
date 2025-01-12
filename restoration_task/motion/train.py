@@ -6,7 +6,7 @@ import torch.nn as nn
 import numpy as np
 from losses import ln_loss
 import torch.optim as optim
-from restoration_task.metal.utils import TrainSetLoader_metal
+from restoration_task.motion.utils import TrainSetLoader_motion
 from model import SwinUNet
 from torch.utils.data import DataLoader
 
@@ -57,7 +57,7 @@ def train():
     print("===> Training")
     for epoch in range(1, opt.nEpochs + 1):
         print(epoch)
-        training_set = TrainSetLoader_metal(device)
+        training_set = TrainSetLoader_motion("/data/Train/HorusEye/images")
         training_loader = DataLoader(dataset=training_set, num_workers=opt.threads, batch_size=opt.batchSize,
                                      shuffle=True)
         trainor(training_loader, optimizer, model, epoch)
@@ -69,11 +69,11 @@ def trainor(training_loader, optimizer, model, epoch):
 
     model.train()
     loss_epoch = 0
-    for iteration, (destroyed, gt, mask) in enumerate(training_loader):
+    for iteration, (destroyed, gt) in enumerate(training_loader):
 
         pre = model(destroyed.repeat(1, 3, 1, 1)).mean(dim=1, keepdim=True)
 
-        loss = ln_loss(pre * mask, gt * mask)
+        loss = ln_loss(pre, gt)
 
         optimizer.zero_grad()
         loss.backward()
@@ -90,7 +90,7 @@ def trainor(training_loader, optimizer, model, epoch):
 
 
 def save_checkpoint(model, epoch, path):
-    model_out_path = os.path.join(path, "scratch_metal.pth")
+    model_out_path = os.path.join(path, "scratch_motion.pth")
     torch.save(model.state_dict(), model_out_path)
     print("Checkpoint saved to {}".format(model_out_path))
 
