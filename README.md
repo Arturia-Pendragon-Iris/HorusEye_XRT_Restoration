@@ -1,5 +1,7 @@
 # HorusEye
-This is the official repository of "HorusEye: A self-supervised foundation model for generalizable X-ray tomography restoration"
+This is the official repository of "HorusEye: A self-supervised foundation model for generalizable X-ray tomography restoration" by Yuetan Chu , Longxi Zhou , Gongning Luo , Kai Kang , Suyu Dong , Zhongyi Han , Lianming Wu , Xianglin Meng , Changchun Yang , Xin Guo , Yuan Cheng , Yuan Qi , Xin Liu , Dexuan Xie , Ricardo Henao , Anthony Capone , Xigang Xiao , Shaodong Cao , Gianluca Setti , Zhaowen Qiu, and Xin Gao.
+
+King Abdullah University of Science and Technology, KAUST
 
 ## Installation
 ```
@@ -9,7 +11,15 @@ pip install pydicom==2.4.4
 pip install monai
 ```
 
-## HorusEye schematic and performance evaluation on dose-comparison data
+## Predict
+### Denoising predtcion
+To predict your data, you can run inference.py by giving a normalized 2D image (predict_denoised_slice) or image volume (predict_denoised_volume). The program will run for several seconds and output the restored results. 
+
+### Other restoration task predtcion
+We provide detailed programs within the restoration_task folders. You can develop your own restoration models based on our provided codes.  
+
+
+## HorusEye schematic and development
 ![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/fig_1_2.png)
 
 ## HorusEye on medical CT denoising
@@ -29,6 +39,9 @@ The project is inspired by the following projects:
 
 We highly appreciate Dr. Jinwu Zhou, Chongxinan Pet Hospital, and Anhong Pet Hospital, Hefei for providing the animal CT scans.
 
+If you have any problem with our paper, code, or employed dataset, you can email Yuetan Chu (yuetan.chu@kaust.edu.sa), Gongning Luo (gongning.luo@kaust.edu.sa) or Xin Gao (xin.gao@kaust.edu.sa) for more information.
+
+<!--
 ## Public medical CT
 - [PENET](https://github.com/marshuang80/PENet)
 - [RSNA-PE](https://www.rsna.org/rsnai/ai-image-challenge/rsna-pe-detection-challenge-2020)
@@ -50,3 +63,4 @@ We highly appreciate Dr. Jinwu Zhou, Chongxinan Pet Hospital, and Anhong Pet Hos
 - [TCIA HCC-TACE dataset](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70230229)
 - [SpineWeb dataset](http://spineweb.digitalimaginggroup.ca/)
 - [CTooth dataset](https://github.com/liangjiubujiu/CTooth)
+-->
