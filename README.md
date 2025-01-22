@@ -36,6 +36,8 @@ The project is inspired by the following projects:
 - [RED CNN](https://github.com/SSinyu/RED-CNN)
 - [CT Former](https://github.com/wdayang/CTformer)
 - [MAP NN](https://github.com/hmshan/MAP-NN)
+- [k-SVD](https://github.com/Deepayan137/K-svd)
+- [BM3D](https://github.com/Ryanshuai/BM3D_py)
 
 We highly appreciate Dr. Jinwu Zhou, Chongxinan Pet Hospital, and Anhong Pet Hospital, Hefei for providing the animal CT scans.
 
