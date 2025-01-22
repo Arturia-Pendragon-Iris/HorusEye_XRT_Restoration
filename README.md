@@ -12,7 +12,7 @@ pip install monai
 ```
 
 ## Predict
-### Denoising predicion
+### Denoising prediction
 To predict your data, you can run inference.py by giving a normalized 2D image (predict_denoised_slice) or image volume (predict_denoised_volume). The program will run for several seconds and output the restored results. 
 
 ### Other restoration tasks
