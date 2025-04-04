@@ -43,26 +43,20 @@ We highly appreciate Dr. Jinwu Zhou, Chongxinan Pet Hospital, and Anhong Pet Hos
 
 If you have any problem with our paper, code, or employed dataset, you can email Yuetan Chu (yuetan.chu@kaust.edu.sa), Gongning Luo (gongning.luo@kaust.edu.sa) or Xin Gao (xin.gao@kaust.edu.sa) for more information.
 
-<!--
-## Public medical CT
+
+## Public X-rat Tomography dataset
+You can download the example datasets to test our model.
 - [PENET](https://github.com/marshuang80/PENet)
 - [RSNA-PE](https://www.rsna.org/rsnai/ai-image-challenge/rsna-pe-detection-challenge-2020)
 - [RAD chest](https://cvit.duke.edu/resource/rad-chestct-dataset/)
-- [Medical Segmentation Decathlon (MSD)](http://medicaldecathlon.com/)
 - [AbdomenCT-1K](https://github.com/JunMa11/AbdomenCT-1K)
-- [CHAOS dataset](https://chaos.grand-challenge.org/)
 - [DeepLesion](https://nihcc.app.box.com/v/DeepLesion)
-- [AAPM LDCT](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=52758026)
-- [Verse Dataset](https://github.com/MIRACLE-Center/CTPelvic1K)
-- [CTPelvic1K](https://github.com/MIRACLE-Center/CTPelvic1K)
-- [RSNA Intracranial Hemorrhage](https://www.kaggle.com/c/rsna-intracranial-hemorrhage-detection/data)
-- [CQ500](http://headctstudy.qure.ai/dataset)
-- [Piglet dataset](https://github.com/xinario/SAGAN)
-- [Luna 16](https://luna16.grand-challenge.org/)
-- [MIDRC dataset](https://www.rsna.org/covid-19/covid-19-ricord)
-- [KiTS 19](https://github.com/neheller/kits19)
-- [TCIA Colonography dataset](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=3539213)
-- [TCIA HCC-TACE dataset](https://wiki.cancerimagingarchive.net/pages/viewpage.action?pageId=70230229)
-- [SpineWeb dataset](http://spineweb.digitalimaginggroup.ca/)
-- [CTooth dataset](https://github.com/liangjiubujiu/CTooth)
--->
+- [Nutrient-dependent growth underpinned the Ediacaran transition to large body size](https://zenodo.org/records/4938539)
+- [Revision of Icacinaceae from the Early Eocene London Clay flora based on X-ray micro-CT](https://zenodo.org/records/5022536)
+- [Arm waving in stylophoran echinoderms: three-dimensional mobility analysis illuminates cornute locomotion](https://zenodo.org/records/3961994)
+- [Battery Pouch Cell with Defects](https://zenodo.org/records/8189323)
+- [TomoBank](https://tomobank.readthedocs.io/en/latest/)
+
+
+##License
+This project is covered under the Apache 2.0 License.
