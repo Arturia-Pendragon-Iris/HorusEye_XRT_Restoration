@@ -58,5 +58,5 @@ You can download the example datasets to test our model.
 - [TomoBank](https://tomobank.readthedocs.io/en/latest/)
 
 
-##License
+## License
 This project is covered under the Apache 2.0 License.
