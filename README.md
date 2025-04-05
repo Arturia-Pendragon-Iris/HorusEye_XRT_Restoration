@@ -48,7 +48,7 @@ We highly appreciate Dr. Jinwu Zhou, Chongxinan Pet Hospital, and Anhong Pet Hos
 If you have any problem with our paper, code, or employed dataset, you can email Yuetan Chu (yuetan.chu@kaust.edu.sa), Gongning Luo (gongning.luo@kaust.edu.sa) or Xin Gao (xin.gao@kaust.edu.sa) for more information.
 
 
-## Public X-rat Tomography dataset
+## Public X-ray Tomography dataset
 You can download the example datasets to test our model.
 - [PENET](https://github.com/marshuang80/PENet)
 - [RSNA-PE](https://www.rsna.org/rsnai/ai-image-challenge/rsna-pe-detection-challenge-2020)
