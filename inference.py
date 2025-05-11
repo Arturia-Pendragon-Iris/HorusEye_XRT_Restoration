@@ -13,7 +13,7 @@ def predict_denoised_slice(ct_slice):
     input_set = torch.tensor(np.stack([ct_slice] * 3, axis=0)[np.newaxis, :]).to(torch.float).to('cuda').half()
     with torch.no_grad():
         inferer = SlidingWindowInferer(roi_size=(512, 512),
-                                       sw_batch_size=4,
+                                       sw_batch_size=1,
                                        overlap=0.25,
                                        mode="gaussian",
                                        sigma_scale=0.25,
