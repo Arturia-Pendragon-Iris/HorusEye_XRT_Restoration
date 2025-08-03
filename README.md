@@ -19,6 +19,9 @@ We provide our previously pretrained checkpoint with only the base dataset (abou
 
 You can also use the [analysis/evaluation.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/analysis/evaluation.py) to reproduce the quantitative results presented in our manuscript, including PSNR, SSIM, and FSC. 
 
+## Dose-comparison dataset
+You can access the dose-comparison datasets through the [ling](https://drive.google.com/drive/folders/1xhjMX4S019yLYYAHNuB7Q2oQFUv7Ratg?usp=sharing). The hyperlinks of other public datasets are provided in the Supplementary Note 1 presented in our Supplementary Information.
+
 ### Other restoration tasks
 We provide detailed programs within the restoration_task folders. You can develop your own restoration models based on our provided codes.  
 
