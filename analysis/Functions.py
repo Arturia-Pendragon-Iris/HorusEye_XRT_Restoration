@@ -25,7 +25,7 @@ def padding_into_512(np_array):
     return new_array, h, np_array.shape[-1]
 
 
-def rescale_95_intensity(image, low=1, high=99):
+def rescale_95_intensity(image, low=0.5, high=99.5):
     # Calculate the 0.5th and 99.5th percentiles
     lower_percentile = np.percentile(image, low)
     upper_percentile = np.percentile(image, high)
@@ -37,31 +37,6 @@ def rescale_95_intensity(image, low=1, high=99):
     rescaled_image = (clipped_image - lower_percentile) / (upper_percentile - lower_percentile)
 
     return rescaled_image
-
-
-def intepolation_GPU(matrix, scale=0.5):
-    W, H, N = matrix.shape[1], matrix.shape[2], matrix.shape[3]
-    new_W, new_H, new_N = int(W //2), int(H //2), int(N //2)
-    matrix = matrix.permute(0, 3, 1, 2)
-    downsampled_matrix = F.interpolate(matrix, size=(new_W, new_H), mode='bilinear',
-                                       align_corners=False)
-    downsampled_matrix = downsampled_matrix.permute(0, 2, 3, 1)
-    # 变成 (batch_size, H, W, C)
-    downsampled_matrix = F.interpolate(matrix, size=(new_W, new_H), mode='bilinear',
-                                       align_corners=False)
-    downsampled_matrix = downsampled_matrix.view(1, W // 2, H // 2, N // 2)
-    downsampled_matrix = downsampled_matrix.permute(0, 3, 1, 2)
-
-    return downsampled_matrix
-
-
-def fill_hole(np_array):
-    binary_array = np.array(np_array, dtype=bool)
-
-    # Fill in the holes
-    filled_array = binary_fill_holes(binary_array)
-
-    return np.array(filled_array, "float32")
 
 
 def center_crop(image_array):
