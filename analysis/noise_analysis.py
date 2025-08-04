@@ -26,8 +26,7 @@ def get_nps(noise_image, show=False):
         plt.xlabel('Frequency')
         plt.ylabel('Power')
         plt.grid()
-
-        # 绘制一维功率-相位谱
+        
         plt.subplot(1, 2, 2)
         plt.plot(phase_spectrum_1D)
         plt.title('1D Power-Phase Spectrum')
@@ -48,18 +47,17 @@ def build_filters():
     for theta in np.arange(0, np.pi, np.pi / 8):
         for K in range(4):
             kern = cv2.getGaborKernel((ksize[K], ksize[K]), 1.0, theta, lamda, 0.5, 0, ktype=cv2.CV_32F)
-            kern /= 1.5 * kern.sum()  # 这里不是很理解
+            kern /= 1.5 * kern.sum()
             filters.append(kern)
 
     return filters
 
 
-# Gabor特征提取
 def getGabor(img):
     filters = build_filters()
     img = img.astype(np.float32)
 
-    res = []  # 滤波结果
+    res = []
     for i in range(len(filters)):
         # res1 = process(img, filters[i])
         accum = np.array(np.zeros_like(img), "float32")
