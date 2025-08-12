@@ -15,7 +15,7 @@ pip install monai
 ### Denoising prediction
 To predict your data, you can run [inference.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/inference.py) by giving a normalized 2D image (predict_denoised_slice) or image volume (predict_denoised_volume) and replacing the checkpoint path with your local path. The program will run for several seconds and output the restored results. 
 
-We provide our previously pretrained checkpoint with only the base dataset (about 1 million images) for the code testing. You can download the checkpoint through the [link](https://drive.google.com/file/d/1nZdp0McRwQNY6W7lE-6uRZhMQdEaPzF0/view?usp=sharing).
+We provide our previously pretrained checkpoint with only the base dataset (about 1 million images) for the code testing. You can download the checkpoint through the [link](https://drive.googlwQNY6W7lE-6uRZhMQdEaPzF0/view?usp=sharing).
 
 You can also use the [analysis/evaluation.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/analysis/evaluation.py) to reproduce the quantitative results presented in our manuscript, including PSNR, SSIM, and FSC. 
 
