@@ -23,7 +23,7 @@ You can also use the [analysis/evaluation.py](https://github.com/Arturia-Pendrag
 We provide detailed programs within the restoration_task folders. You can develop your own restoration models based on our provided codes.  
 
 ## Dose-comparison dataset
-You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1xhjMX4S019yLYYAHNuB7Q2oQFUv7Ratg?usp=sharing). The hyperlinks of other public datasets are provided in the Supplementary Note 1 presented in our Supplementary Information.
+You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1ihSIX5sFhNzvc0Whs6dXROyCFuQTaMvM?usp=sharing). The hyperlinks of other public datasets are provided in the Supplementary Note 1 presented in our Supplementary Information.
 
 ## HorusEye schematic and development
 ![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/fig_1_2.png)
