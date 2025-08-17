@@ -5,32 +5,81 @@ from skimage.restoration import (
     denoise_nl_means,
     estimate_sigma,
 )
+import pywt
 from sklearn.feature_extraction import image
 from ksvd import ApproximateKSVD
-from analysis.filter_2D import gaussian_filter
+from analysis.filter.filter_2D import gaussian_filter
 import cv2
+from bm3d import bm3d, BM3DProfile
 import numpy as np
 from sklearn import linear_model
-import scipy.misc
+from scipy.ndimage import gaussian_filter, sobel
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-import bm3d
+from torch.optim.lr_scheduler import StepLR
 import tqdm
+from DIP.utils.common_utils import get_noise, get_image, np_to_torch
+from DIP.models.skip import skip
+import prox_tv as ptv
+
+cv2.setUseOptimized(True)
 
 
-def denoise_tv(img, weight=0.1):
+def denoise_tv_img(img, weight=0.01):
     de = denoise_tv_chambolle(img[np.newaxis], weight=weight, channel_axis=0)
     return de[0]
 
 
-def denoise_bila(img):
+def denoise_tv_scan(img, weight=0.07):
+    de = np.zeros([img.shape[0], img.shape[1], img.shape[2]])
+    for i in range(img.shape[-1]):
+        de[:, :, i] = denoise_tv_img(img[:, :, i], weight=weight)
+    return np.array(de, "float32")
+
+
+def denoise_atv_img(image, alpha0=0.05, weight_range=(1e-4, 0.1), tol=1e-6, max_iter=10):
+    """
+    TV denoising with automatic weight selection using residual-based noise estimation.
+
+    Parameters:
+        image: 2D ndarray, float32/float64, normalized to [0, 1]
+        alpha0: Initial small weight for first-pass denoising
+        weight_range: Search range for TV weight (tuple)
+        tol: Tolerance for MSE matching
+        max_iter: Max iterations for binary search
+
+    Returns:
+        Denoised image (2D ndarray)
+    """
+    # Step 1: Estimate noise variance using small weight
+    u0 = denoise_tv_chambolle(image, weight=alpha0)
+    sigma2 = np.mean((image - u0) ** 2)
+
+    # Step 2: Binary search for weight matching residual ~ sigma²
+    lo, hi = weight_range
+    for _ in range(max_iter):
+        mid = (lo + hi) / 2
+        u = denoise_tv_chambolle(image, weight=mid)
+        mse = np.mean((image - u) ** 2)
+        print(mse, sigma2)
+        if abs(mse - sigma2) < tol:
+            break
+        if mse > sigma2:
+            lo = mid
+        else:
+            hi = mid
+
+    return u
+
+
+def denoise_bila_img(img):
     de = denoise_bilateral(img[np.newaxis], sigma_color=0.05, sigma_spatial=15, channel_axis=0)
     return de[0]
 
 
-def denoise_wave(img):
+def denoise_wave_img(img):
     de = denoise_wavelet(img[np.newaxis], channel_axis=0, rescale_sigma=True)
     return de[0]
 
@@ -42,7 +91,7 @@ def denoise_wave_scan(img):
     return np.array(de, "float32")
 
 
-def denoise_nl(img):
+def denoise_nl_img(img):
     de = denoise_nl_means(img)
     return de
 
@@ -50,31 +99,25 @@ def denoise_nl(img):
 def denoise_nl_scan(img):
     de = np.zeros([img.shape[0], img.shape[1], img.shape[2]])
     for i in range(img.shape[-1]):
-        de[:, :, i] = denoise_nl(img[:, :, i])
+        de[:, :, i] = denoise_nl_img(img[:, :, i])
     return np.array(de, "float32")
 
 
-def denoise_gaussian(img, sigma=0.5):
+def denoise_gaussian_img(img, sigma=0.5):
     return gaussian_filter(img, sigma=sigma)
 
 
 def denoise_gaussian_scan(img):
     de = np.zeros([img.shape[0], img.shape[1], img.shape[2]])
     for i in range(img.shape[-1]):
-        de[:, :, i] = denoise_gaussian(img[:, :, i])
+        de[:, :, i] = denoise_gaussian_img(img[:, :, i])
     return np.array(de, "float32")
 
 
+##### KSVD denoising
 class KSVD(object):
     def __init__(self, n_components, max_iter=30, tol=5000,
                  n_nonzero_coefs=None):
-        """
-        稀疏模型Y = DX，Y为样本矩阵，使用KSVD动态更新字典矩阵D和稀疏矩阵X
-        :param n_components: 字典所含原子个数（字典的列数）
-        :param max_iter: 最大迭代次数
-        :param tol: 稀疏表示结果的容差
-        :param n_nonzero_coefs: 稀疏度
-        """
         self.dictionary = None
         self.sparsecode = None
         self.max_iter = max_iter
@@ -83,17 +126,11 @@ class KSVD(object):
         self.n_nonzero_coefs = n_nonzero_coefs
 
     def _initialize(self, y):
-        """
-        初始化字典矩阵
-        """
         u, s, v = np.linalg.svd(y)
         self.dictionary = u[:, :self.n_components]
         # print(self.dictionary.shape)
 
     def _update_dict(self, y, d, x):
-        """
-        使用KSVD更新字典的过程
-        """
         for i in range(self.n_components):
             index = np.nonzero(x[i, :])[0]
             if len(index) == 0:
@@ -123,17 +160,6 @@ class KSVD(object):
 
 
 def denoise_ksvd_img(img):
-    # ksvd = KSVD(200)
-    # dictionary, sparsecode = ksvd.fit(img)
-    # output = dictionary.dot(sparsecode)
-    # return np.array(output, "float32")
-
-    # patch_size = 8
-    # initial_dictionary = DCTDictionary(patch_size, 11)
-    # denoiser = KSVDImageDenoiser(initial_dictionary, pursuit=MatchingPursuit)
-    # z, d, a = denoiser.denoise(img, sigma=sigma, patch_size=patch_size,
-    #                            n_iter=4, multiplier=0.5, noise_gain=1.075)
-
     patch_size = (5, 5)
     patches = image.extract_patches_2d(img, patch_size)
     signals = patches.reshape(patches.shape[0], -1)
@@ -149,6 +175,23 @@ def denoise_ksvd_img(img):
     return reduced_img
 
 
+def denoise_ksvd_2_img(img, patch_size=(5, 5), n_components=32, n_nonzero=5):
+    patches = image.extract_patches_2d(img, patch_size)
+    signals = patches.reshape(patches.shape[0], -1).astype(np.float32)
+    mean = np.mean(signals, axis=1)[:, np.newaxis]
+    signals -= mean
+
+    aksvd = ApproximateKSVD(n_components=n_components, transform_n_nonzero_coefs=n_nonzero)
+    subset = signals[np.random.choice(len(signals), min(1000, len(signals)), replace=False)]
+    dictionary = aksvd.fit(subset).components_
+
+    gamma = aksvd.transform(signals)
+    reduced = gamma.dot(dictionary) + mean
+    reduced_img = image.reconstruct_from_patches_2d(reduced.reshape(patches.shape), img.shape)
+
+    return reduced_img
+
+
 def denoise_ksvd_scan(img):
     de = np.zeros([img.shape[0], img.shape[1], img.shape[2]])
     for i in range(img.shape[-1]):
@@ -156,458 +199,262 @@ def denoise_ksvd_scan(img):
     return np.array(de, "float32")
 
 
-cv2.setUseOptimized(True)
-
-# Parameters initialization
-sigma = 25
-Threshold_Hard3D = 2.7 * sigma  # Threshold for Hard Thresholding
-First_Match_threshold = 2500  # 用于计算block之间相似度的阈值
-Step1_max_matched_cnt = 16  # 组最大匹配的块数
-Step1_Blk_Size = 8  # block_Size即块的大小，8*8
-Step1_Blk_Step = 3  # Rather than sliding by one pixel to every next reference block, use a step of Nstep pixels in both horizontal and vertical directions.
-Step1_Search_Step = 3  # 块的搜索step
-Step1_Search_Window = 39  # Search for candidate matching blocks in a local neighborhood of restricted size NS*NS centered
-
-Second_Match_threshold = 400  # 用于计算block之间相似度的阈值
-Step2_max_matched_cnt = 32
-Step2_Blk_Size = 8
-Step2_Blk_Step = 3
-Step2_Search_Step = 3
-Step2_Search_Window = 39
-
-Beta_Kaiser = 2.0
-
-
-def init(img, _blk_size, _Beta_Kaiser):
-    """该函数用于初始化，返回用于记录过滤后图像以及权重的数组,还有构造凯撒窗"""
-    m_shape = img.shape
-    m_img = np.matrix(np.zeros(m_shape, dtype=float))
-    m_wight = np.matrix(np.zeros(m_shape, dtype=float))
-    K = np.matrix(np.kaiser(_blk_size, _Beta_Kaiser))
-    m_Kaiser = np.array(K.T * K)  # 构造一个凯撒窗
-    return m_img, m_wight, m_Kaiser
-
-
-def Locate_blk(i, j, blk_step, block_Size, width, height):
-    '''该函数用于保证当前的blk不超出图像范围'''
-    if i * blk_step + block_Size < width:
-        point_x = i * blk_step
-    else:
-        point_x = width - block_Size
-
-    if j * blk_step + block_Size < height:
-        point_y = j * blk_step
-    else:
-        point_y = height - block_Size
-
-    m_blockPoint = np.array((point_x, point_y), dtype=int)  # 当前参考图像的顶点
-
-    return m_blockPoint
-
-
-def Define_SearchWindow(_noisyImg, _BlockPoint, _WindowSize, Blk_Size):
-    """该函数返回一个二元组（x,y）,用以界定_Search_Window顶点坐标"""
-    point_x = _BlockPoint[0]  # 当前坐标
-    point_y = _BlockPoint[1]  # 当前坐标
-
-    # 获得SearchWindow四个顶点的坐标
-    LX = point_x + Blk_Size / 2 - _WindowSize / 2  # 左上x
-    LY = point_y + Blk_Size / 2 - _WindowSize / 2  # 左上y
-    RX = LX + _WindowSize  # 右下x
-    RY = LY + _WindowSize  # 右下y
-
-    # 判断一下是否越界
-    if LX < 0:
-        LX = 0
-    elif RX > _noisyImg.shape[0]:
-        LX = _noisyImg.shape[0] - _WindowSize
-    if LY < 0:
-        LY = 0
-    elif RY > _noisyImg.shape[0]:
-        LY = _noisyImg.shape[0] - _WindowSize
-
-    return np.array((LX, LY), dtype=int)
-
-
-def Step1_fast_match(_noisyImg, _BlockPoint):
-    """快速匹配"""
-    '''
-    *返回邻域内寻找和当前_block相似度最高的几个block,返回的数组中包含本身
-    *_noisyImg:噪声图像
-    *_BlockPoint:当前block的坐标及大小
-    '''
-    (present_x, present_y) = _BlockPoint  # 当前坐标
-    Blk_Size = Step1_Blk_Size
-    Search_Step = Step1_Search_Step
-    Threshold = First_Match_threshold
-    max_matched = Step1_max_matched_cnt
-    Window_size = Step1_Search_Window
-
-    blk_positions = np.zeros((max_matched, 2), dtype=int)  # 用于记录相似blk的位置
-    Final_similar_blocks = np.zeros((max_matched, Blk_Size, Blk_Size), dtype=float)
-
-    img = _noisyImg[present_x: present_x + Blk_Size, present_y: present_y + Blk_Size]
-    dct_img = cv2.dct(img.astype(np.float64))  # 对目标作block作二维余弦变换
-
-    Final_similar_blocks[0, :, :] = dct_img
-    blk_positions[0, :] = _BlockPoint
-
-    Window_location = Define_SearchWindow(_noisyImg, _BlockPoint, Window_size, Blk_Size)
-    blk_num = (Window_size - Blk_Size) / Search_Step  # 确定最多可以找到多少相似blk
-    blk_num = int(blk_num)
-    (present_x, present_y) = Window_location
-
-    similar_blocks = np.zeros((blk_num ** 2, Blk_Size, Blk_Size), dtype=float)
-    m_Blkpositions = np.zeros((blk_num ** 2, 2), dtype=int)
-    Distances = np.zeros(blk_num ** 2, dtype=float)  # 记录各个blk与它的相似度
-
-    # 开始在_Search_Window中搜索,初始版本先采用遍历搜索策略,这里返回最相似的几块
-    matched_cnt = 0
-    for i in range(blk_num):
-        for j in range(blk_num):
-            tem_img = _noisyImg[present_x: present_x + Blk_Size, present_y: present_y + Blk_Size]
-            dct_Tem_img = cv2.dct(tem_img.astype(np.float64))
-            m_Distance = np.linalg.norm((dct_img - dct_Tem_img)) ** 2 / (Blk_Size ** 2)
-
-            # 下面记录数据自动不考虑自身(因为已经记录)
-            if m_Distance < Threshold and m_Distance > 0:  # 说明找到了一块符合要求的
-                similar_blocks[matched_cnt, :, :] = dct_Tem_img
-                m_Blkpositions[matched_cnt, :] = (present_x, present_y)
-                Distances[matched_cnt] = m_Distance
-                matched_cnt += 1
-            present_y += Search_Step
-        present_x += Search_Step
-        present_y = Window_location[1]
-    Distances = Distances[:matched_cnt]
-    Sort = Distances.argsort()
-
-    # 统计一下找到了多少相似的blk
-    if matched_cnt < max_matched:
-        Count = matched_cnt + 1
-    else:
-        Count = max_matched
-
-    if Count > 0:
-        for i in range(1, Count):
-            Final_similar_blocks[i, :, :] = similar_blocks[Sort[i - 1], :, :]
-            blk_positions[i, :] = m_Blkpositions[Sort[i - 1], :]
-    return Final_similar_blocks, blk_positions, Count
-
-
-def Step1_3DFiltering(_similar_blocks):
-    '''
-    *3D变换及滤波处理
-    *_similar_blocks:相似的一组block,这里已经是频域的表示
-    *要将_similar_blocks第三维依次取出,然在频域用阈值滤波之后,再作反变换
-    '''
-    statis_nonzero = 0  # 非零元素个数
-    m_Shape = _similar_blocks.shape
-
-    # 下面这一段代码很耗时
-    for i in range(m_Shape[1]):
-        for j in range(m_Shape[2]):
-            tem_Vct_Trans = cv2.dct(_similar_blocks[:, i, j])
-            tem_Vct_Trans[np.abs(tem_Vct_Trans[:]) < Threshold_Hard3D] = 0.
-            statis_nonzero += tem_Vct_Trans.nonzero()[0].size
-            _similar_blocks[:, i, j] = cv2.idct(tem_Vct_Trans)[0]
-    return _similar_blocks, statis_nonzero
-
-
-def Aggregation_hardthreshold(_similar_blocks, blk_positions, m_basic_img, m_wight_img, _nonzero_num, Count, Kaiser):
-    '''
-    *对3D变换及滤波后输出的stack进行加权累加,得到初步滤波的图片
-    *_similar_blocks:相似的一组block,这里是频域的表示
-    *对于最后的数组，乘以凯撒窗之后再输出
-    '''
-    _shape = _similar_blocks.shape
-    if _nonzero_num < 1:
-        _nonzero_num = 1
-    block_wight = (1. / _nonzero_num) * Kaiser
-    for i in range(Count):
-        point = blk_positions[i, :]
-        tem_img = (1. / _nonzero_num) * cv2.idct(_similar_blocks[i, :, :]) * Kaiser
-        m_basic_img[point[0]:point[0] + _shape[1], point[1]:point[1] + _shape[2]] += tem_img
-        m_wight_img[point[0]:point[0] + _shape[1], point[1]:point[1] + _shape[2]] += block_wight
-
-
-def BM3D_1st_step(_noisyImg):
-    """第一步,基本去噪"""
-    # 初始化一些参数：
-    (width, height) = _noisyImg.shape  # 得到图像的长宽
-    block_Size = Step1_Blk_Size  # 块大小
-    blk_step = Step1_Blk_Step  # N块步长滑动
-    Width_num = (width - block_Size) / blk_step
-    Height_num = (height - block_Size) / blk_step
-
-    # 初始化几个数组
-    Basic_img, m_Wight, m_Kaiser = init(_noisyImg, Step1_Blk_Size, Beta_Kaiser)
-
-    # 开始逐block的处理,+2是为了避免边缘上不够
-    for i in range(int(Width_num + 2)):
-        for j in range(int(Height_num + 2)):
-            # m_blockPoint当前参考图像的顶点
-            m_blockPoint = Locate_blk(i, j, blk_step, block_Size, width, height)  # 该函数用于保证当前的blk不超出图像范围
-            Similar_Blks, Positions, Count = Step1_fast_match(_noisyImg, m_blockPoint)
-            Similar_Blks, statis_nonzero = Step1_3DFiltering(Similar_Blks)
-            Aggregation_hardthreshold(Similar_Blks, Positions, Basic_img, m_Wight, statis_nonzero, Count, m_Kaiser)
-    Basic_img[:, :] /= m_Wight[:, :]
-    basic = np.matrix(Basic_img, dtype=int)
-    basic.astype(np.uint8)
-
-    return basic
-
-
-def Step2_fast_match(_Basic_img, _noisyImg, _BlockPoint):
-    '''
-    *快速匹配算法,返回邻域内寻找和当前_block相似度最高的几个block,要同时返回basicImg和IMG
-    *_Basic_img: 基础去噪之后的图像
-    *_noisyImg:噪声图像
-    *_BlockPoint:当前block的坐标及大小
-    '''
-    (present_x, present_y) = _BlockPoint  # 当前坐标
-    Blk_Size = Step2_Blk_Size
-    Threshold = Second_Match_threshold
-    Search_Step = Step2_Search_Step
-    max_matched = Step2_max_matched_cnt
-    Window_size = Step2_Search_Window
-
-    blk_positions = np.zeros((max_matched, 2), dtype=int)  # 用于记录相似blk的位置
-    Final_similar_blocks = np.zeros((max_matched, Blk_Size, Blk_Size), dtype=float)
-    Final_noisy_blocks = np.zeros((max_matched, Blk_Size, Blk_Size), dtype=float)
-
-    img = _Basic_img[present_x: present_x + Blk_Size, present_y: present_y + Blk_Size]
-    dct_img = cv2.dct(img.astype(np.float32))  # 对目标作block作二维余弦变换
-    Final_similar_blocks[0, :, :] = dct_img
-
-    n_img = _noisyImg[present_x: present_x + Blk_Size, present_y: present_y + Blk_Size]
-    dct_n_img = cv2.dct(n_img.astype(np.float32))  # 对目标作block作二维余弦变换
-    Final_noisy_blocks[0, :, :] = dct_n_img
-
-    blk_positions[0, :] = _BlockPoint
-
-    Window_location = Define_SearchWindow(_noisyImg, _BlockPoint, Window_size, Blk_Size)
-    blk_num = (Window_size - Blk_Size) / Search_Step  # 确定最多可以找到多少相似blk
-    blk_num = int(blk_num)
-    (present_x, present_y) = Window_location
-
-    similar_blocks = np.zeros((blk_num ** 2, Blk_Size, Blk_Size), dtype=float)
-    m_Blkpositions = np.zeros((blk_num ** 2, 2), dtype=int)
-    Distances = np.zeros(blk_num ** 2, dtype=float)  # 记录各个blk与它的相似度
-
-    # 开始在_Search_Window中搜索,初始版本先采用遍历搜索策略,这里返回最相似的几块
-    matched_cnt = 0
-    for i in range(blk_num):
-        for j in range(blk_num):
-            tem_img = _Basic_img[present_x: present_x + Blk_Size, present_y: present_y + Blk_Size]
-            dct_Tem_img = cv2.dct(tem_img.astype(np.float32))
-            m_Distance = np.linalg.norm((dct_img - dct_Tem_img)) ** 2 / (Blk_Size ** 2)
-
-            # 下面记录数据自动不考虑自身(因为已经记录)
-            if m_Distance < Threshold and m_Distance > 0:
-                similar_blocks[matched_cnt, :, :] = dct_Tem_img
-                m_Blkpositions[matched_cnt, :] = (present_x, present_y)
-                Distances[matched_cnt] = m_Distance
-                matched_cnt += 1
-            present_y += Search_Step
-        present_x += Search_Step
-        present_y = Window_location[1]
-    Distances = Distances[:matched_cnt]
-    Sort = Distances.argsort()
-
-    # 统计一下找到了多少相似的blk
-    if matched_cnt < max_matched:
-        Count = matched_cnt + 1
-    else:
-        Count = max_matched
-
-    if Count > 0:
-        for i in range(1, Count):
-            Final_similar_blocks[i, :, :] = similar_blocks[Sort[i - 1], :, :]
-            blk_positions[i, :] = m_Blkpositions[Sort[i - 1], :]
-
-            (present_x, present_y) = m_Blkpositions[Sort[i - 1], :]
-            n_img = _noisyImg[present_x: present_x + Blk_Size, present_y: present_y + Blk_Size]
-            Final_noisy_blocks[i, :, :] = cv2.dct(n_img.astype(np.float64))
-
-    return Final_similar_blocks, Final_noisy_blocks, blk_positions, Count
-
-
-def Step2_3DFiltering(_Similar_Bscs, _Similar_Imgs):
-    '''
-    *3D维纳变换的协同滤波
-    *_similar_blocks:相似的一组block,这里是频域的表示
-    *要将_similar_blocks第三维依次取出,然后作dct,在频域进行维纳滤波之后,再作反变换
-    *返回的Wiener_wight用于后面Aggregation
-    '''
-    m_Shape = _Similar_Bscs.shape
-    Wiener_wight = np.zeros((m_Shape[1], m_Shape[2]), dtype=float)
-
-    for i in range(m_Shape[1]):
-        for j in range(m_Shape[2]):
-            tem_vector = _Similar_Bscs[:, i, j]
-            tem_Vct_Trans = np.matrix(cv2.dct(tem_vector))
-            Norm_2 = np.float64(tem_Vct_Trans.T * tem_Vct_Trans)
-            m_weight = Norm_2 / (Norm_2 + sigma ** 2)
-            if m_weight != 0:
-                Wiener_wight[i, j] = 1. / (m_weight ** 2 * sigma ** 2)
-            # else:
-            #     Wiener_wight[i, j] = 10000
-            tem_vector = _Similar_Imgs[:, i, j]
-            tem_Vct_Trans = m_weight * cv2.dct(tem_vector)
-            _Similar_Bscs[:, i, j] = cv2.idct(tem_Vct_Trans)[0]
-
-    return _Similar_Bscs, Wiener_wight
-
-
-def Aggregation_Wiener(_Similar_Blks, _Wiener_wight, blk_positions, m_basic_img, m_wight_img, Count, Kaiser):
-    '''
-    *对3D变换及滤波后输出的stack进行加权累加,得到初步滤波的图片
-    *_similar_blocks:相似的一组block,这里是频域的表示
-    *对于最后的数组，乘以凯撒窗之后再输出
-    '''
-    _shape = _Similar_Blks.shape
-    block_wight = _Wiener_wight  # * Kaiser
-
-    for i in range(Count):
-        point = blk_positions[i, :]
-        tem_img = _Wiener_wight * cv2.idct(_Similar_Blks[i, :, :])  # * Kaiser
-        m_basic_img[point[0]:point[0] + _shape[1], point[1]:point[1] + _shape[2]] += tem_img
-        m_wight_img[point[0]:point[0] + _shape[1], point[1]:point[1] + _shape[2]] += block_wight
-
-
-def BM3D_2nd_step(_basicImg, _noisyImg):
-    '''Step 2. 最终的估计: 利用基本的估计，进行改进了的分组以及协同维纳滤波'''
-    # 初始化一些参数：
-    (width, height) = _noisyImg.shape
-    block_Size = Step2_Blk_Size
-    blk_step = Step2_Blk_Step
-    Width_num = (width - block_Size) / blk_step
-    Height_num = (height - block_Size) / blk_step
-
-    # 初始化几个数组
-    m_img, m_Wight, m_Kaiser = init(_noisyImg, block_Size, Beta_Kaiser)
-
-    for i in range(int(Width_num + 2)):
-        for j in range(int(Height_num + 2)):
-            m_blockPoint = Locate_blk(i, j, blk_step, block_Size, width, height)
-            Similar_Blks, Similar_Imgs, Positions, Count = Step2_fast_match(_basicImg, _noisyImg, m_blockPoint)
-            Similar_Blks, Wiener_wight = Step2_3DFiltering(Similar_Blks, Similar_Imgs)
-            Aggregation_Wiener(Similar_Blks, Wiener_wight, Positions, m_img, m_Wight, Count, m_Kaiser)
-    m_img[:, :] /= m_Wight[:, :]
-    Final = np.matrix(m_img, dtype=int)
-    Final.astype(np.uint8)
-
-    return Final
-
-
-def denoise_bm3d(img, var=1):
-    return bm3d.bm3d(img, sigma_psd=var)
-
-
-def denoise_bm3d_scan(img, var):
-    de = np.zeros([img.shape[0], img.shape[1], img.shape[2]])
-    for i in range(img.shape[-1]):
-        de[:, :, i] = denoise_bm3d(img[:, :, i], var)
-    return np.array(de, "float32")
-
-
-class network(nn.Module):
-    def __init__(self, n_chan, chan_embed=48):
-        super(network, self).__init__()
+class BM3D:
+    def __init__(self, sigma=25):
+        self.sigma = sigma
+        self.Thresh_Hard3D = 2.7 * sigma
+        self.Step1_thresh = 2500
+        self.Step1_max_cnt = 16
+        self.Step1_blk_size = 8
+        self.Step1_blk_step = 3
+        self.Step1_search_step = 3
+        self.Step1_window = 39
+        self.Step2_thresh = 400
+        self.Step2_max_cnt = 32
+        self.Step2_blk_size = 8
+        self.Step2_blk_step = 3
+        self.Step2_search_step = 3
+        self.Step2_window = 39
+        self.beta_kaiser = 2.0
+
+    def init_arrays(self, img, blk_size):
+        shape = img.shape
+        accum = np.zeros(shape, dtype=float)
+        weight = np.zeros(shape, dtype=float)
+        kaiser = np.outer(np.kaiser(blk_size, self.beta_kaiser), np.kaiser(blk_size, self.beta_kaiser))
+        return accum, weight, kaiser
+
+    def locate_block(self, i, j, step, blk_size, width, height):
+        x = i * step if i * step + blk_size < width else width - blk_size
+        y = j * step if j * step + blk_size < height else height - blk_size
+        return np.array((x, y), dtype=int)
+
+    def search_window(self, img, point, window_size, blk_size):
+        x, y = point
+        lx = max(x + blk_size // 2 - window_size // 2, 0)
+        ly = max(y + blk_size // 2 - window_size // 2, 0)
+        lx = min(lx, img.shape[0] - window_size)
+        ly = min(ly, img.shape[1] - window_size)
+        return np.array((lx, ly), dtype=int)
+
+    def dct_match(self, img, ref_blk, ref_pos, blk_size, step, threshold, max_cnt, window_size):
+        ref_dct = cv2.dct(ref_blk.astype(np.float64))
+        matched = np.zeros((max_cnt, blk_size, blk_size), dtype=float)
+        positions = np.zeros((max_cnt, 2), dtype=int)
+        matched[0] = ref_dct
+        positions[0] = ref_pos
+
+        win_loc = self.search_window(img, ref_pos, window_size, blk_size)
+        bx, by = win_loc
+        blk_num = (window_size - blk_size) // step
+        sim_blks = np.zeros((blk_num ** 2, blk_size, blk_size), dtype=float)
+        sim_pos = np.zeros((blk_num ** 2, 2), dtype=int)
+        dists = np.zeros(blk_num ** 2, dtype=float)
+        cnt = 0
+
+        for i in range(blk_num):
+            for j in range(blk_num):
+                x, y = bx + i * step, by + j * step
+                blk = cv2.dct(img[x:x + blk_size, y:y + blk_size].astype(np.float64))
+                dist = np.linalg.norm(ref_dct - blk) ** 2 / blk_size ** 2
+                if 0 < dist < threshold:
+                    sim_blks[cnt], sim_pos[cnt], dists[cnt] = blk, (x, y), dist
+                    cnt += 1
+
+        top = min(cnt + 1, max_cnt)
+        sorted_idx = np.argsort(dists[:cnt])
+        for i in range(1, top):
+            matched[i] = sim_blks[sorted_idx[i - 1]]
+            positions[i] = sim_pos[sorted_idx[i - 1]]
+        return matched, positions, top
+
+    def thresholding(self, blocks):
+        nonzero = 0
+        for i in range(blocks.shape[1]):
+            for j in range(blocks.shape[2]):
+                coeff = cv2.dct(blocks[:, i, j])
+                coeff[np.abs(coeff) < self.Thresh_Hard3D] = 0.
+                nonzero += np.count_nonzero(coeff)
+                blocks[:, i, j] = cv2.idct(coeff)[0]
+        return blocks, nonzero
+
+    def aggregate(self, blocks, positions, accum, weight, nonzero, count, kaiser):
+        if nonzero < 1:
+            nonzero = 1
+        blk_weight = (1. / nonzero) * kaiser
+        for i in range(count):
+            x, y = positions[i]
+            blk = (1. / nonzero) * cv2.idct(blocks[i]) * kaiser
+            accum[x:x + blk.shape[0], y:y + blk.shape[1]] += blk
+            weight[x:x + blk.shape[0], y:y + blk.shape[1]] += blk_weight
+
+    def step1(self, noisy_img):
+        h, w = noisy_img.shape
+        step = self.Step1_blk_step
+        blk_size = self.Step1_blk_size
+        blk_count_x = (h - blk_size) // step + 2
+        blk_count_y = (w - blk_size) // step + 2
+        accum, weight, kaiser = self.init_arrays(noisy_img, blk_size)
+
+        for i in range(blk_count_x):
+            for j in range(blk_count_y):
+                pt = self.locate_block(i, j, step, blk_size, h, w)
+                blk = noisy_img[pt[0]:pt[0] + blk_size, pt[1]:pt[1] + blk_size]
+                matched, pos, count = self.dct_match(noisy_img, blk, pt, blk_size,
+                                                     self.Step1_search_step, self.Step1_thresh,
+                                                     self.Step1_max_cnt, self.Step1_window)
+                matched, nonzero = self.thresholding(matched)
+                self.aggregate(matched, pos, accum, weight, nonzero, count, kaiser)
 
+        return np.uint8(np.divide(accum, weight, out=np.zeros_like(accum), where=weight != 0))
+
+
+# def denoise_bm3d_img(img, var=0.1):
+#     denoised_1 = bm3d.bm3d(img, sigma_psd=var)
+#     e_var = np.std(denoised_1 - img)
+#     return bm3d.bm3d(img, sigma_psd=e_var)
+
+
+# def denoise_bm3d_scan(img):
+#     de = np.zeros([img.shape[0], img.shape[1], img.shape[2]])
+#     for i in range(img.shape[-1]):
+#         de[:, :, i] = denoise_bm3d_img(img[:, :, i])
+#     return np.array(de, "float32")
+
+
+def denoise_bm3d_img(img):
+    def estimate_sigma_mad(image):
+        coeffs = pywt.dwt2(image, 'db1')
+        _, (cH, cV, cD) = coeffs
+        high_freq = np.concatenate([cH.ravel(), cV.ravel(), cD.ravel()])
+        sigma_est = np.median(np.abs(high_freq)) / 0.6745
+        return sigma_est
+
+    print(estimate_sigma_mad(img))
+    return bm3d(img, sigma_psd=estimate_sigma_mad(img))
+
+
+def denoise_bm3d_img_2(img, var=0.05):
+    return bm3d(img, sigma_psd=var)
+
+
+class ZS_N2N(nn.Module):
+    def __init__(self, n_channels=1, embed_channels=48):
+        super(ZS_N2N, self).__init__()
         self.act = nn.LeakyReLU(negative_slope=0.2, inplace=True)
-        self.conv1 = nn.Conv2d(n_chan, chan_embed, 3, padding=1)
-        self.conv2 = nn.Conv2d(chan_embed, chan_embed, 3, padding=1)
-        self.conv3 = nn.Conv2d(chan_embed, n_chan, 1)
+        self.conv1 = nn.Conv2d(n_channels, embed_channels, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(embed_channels, embed_channels, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv2d(embed_channels, n_channels, kernel_size=1)
 
     def forward(self, x):
         x = self.act(self.conv1(x))
         x = self.act(self.conv2(x))
-        x = self.conv3(x)
+        return self.conv3(x)
 
-        return x
+    def _pair_downsampler(self, img):
+        # Input shape: (B, C, H, W)
+        c = img.shape[1]
+        f1 = torch.tensor([[[[0, 0.5], [0.5, 0]]]], dtype=img.dtype, device=img.device).repeat(c, 1, 1, 1)
+        f2 = torch.tensor([[[[0.5, 0], [0, 0.5]]]], dtype=img.dtype, device=img.device).repeat(c, 1, 1, 1)
+        out1 = F.conv2d(img, f1, stride=2, groups=c)
+        out2 = F.conv2d(img, f2, stride=2, groups=c)
+        return out1, out2
 
+    def _mse(self, x, y):
+        return F.mse_loss(x, y)
 
-def pair_downsampler(img):
-    # img has shape B C H W
-    c = img.shape[1]
+    def compute_loss(self, noisy_img):
+        # Residual prediction loss
+        noisy1, noisy2 = self._pair_downsampler(noisy_img)
+        pred1 = noisy1 - self(noisy1)
+        pred2 = noisy2 - self(noisy2)
+        loss_res = 0.5 * (self._mse(noisy1, pred2) + self._mse(noisy2, pred1))
 
-    filter1 = torch.FloatTensor([[[[0, 0.5], [0.5, 0]]]]).to(img.device)
-    filter1 = filter1.repeat(c, 1, 1, 1)
+        # Consistency loss
+        denoised = noisy_img - self(noisy_img)
+        denoised1, denoised2 = self._pair_downsampler(denoised)
+        loss_cons = 0.5 * (self._mse(pred1, denoised1) + self._mse(pred2, denoised2))
 
-    filter2 = torch.FloatTensor([[[[0.5, 0], [0, 0.5]]]]).to(img.device)
-    filter2 = filter2.repeat(c, 1, 1, 1)
+        return loss_res + loss_cons
 
-    output1 = F.conv2d(img, filter1, stride=2, groups=c)
-    output2 = F.conv2d(img, filter2, stride=2, groups=c)
-
-    return output1, output2
-
-
-def mse(gt: torch.Tensor, pred: torch.Tensor) -> torch.Tensor:
-    loss = torch.nn.MSELoss()
-    return loss(gt, pred)
-
-
-def loss_func(noisy_img, model):
-    noisy1, noisy2 = pair_downsampler(noisy_img)
-
-    pred1 = noisy1 - model(noisy1)
-    pred2 = noisy2 - model(noisy2)
-
-    loss_res = 1 / 2 * (mse(noisy1, pred2) + mse(noisy2, pred1))
-
-    noisy_denoised = noisy_img - model(noisy_img)
-    denoised1, denoised2 = pair_downsampler(noisy_denoised)
-
-    loss_cons = 1 / 2 * (mse(pred1, denoised1) + mse(pred2, denoised2))
-
-    loss = loss_res + loss_cons
-
-    return loss
+    def train_step(self, optimizer, noisy_img):
+        self.train()
+        loss = self.compute_loss(noisy_img)
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        return loss.item()
 
 
-def train(model, optimizer, noisy_img):
-    loss = loss_func(noisy_img, model)
-    optimizer.zero_grad()
-    loss.backward()
-    optimizer.step()
-    return loss.item()
-
-
-def denoise(model, noisy_img):
-    with torch.no_grad():
-        pred = torch.clamp(noisy_img - model(noisy_img), 0, 1)
-
-    return pred
-
-
-def denoise_2noise_img(img):
+def denoise_ZSN2N_img(img):
+    # Normalize and prepare input
     img = np.clip(img, 0, 1)
-    img = torch.tensor(img[np.newaxis, np.newaxis]).cuda().to(torch.float)
-    model = network(n_chan=1)
-    model = model.cuda()
+    img = torch.tensor(img[np.newaxis, np.newaxis], dtype=torch.float32).cuda()
 
-    max_epoch = 2000  # training epochs
-    lr = 0.002  # learning rate
-    step_size = 50  # number of epochs at which learning rate decays
-    gamma = 0.5  # factor by which learning rate decays
+    # Initialize model
+    model = ZS_N2N(n_channels=1).cuda()
+
+    # Training settings
+    max_epoch = 1000
+    lr = 0.001
+    step_size = 1000
+    gamma = 0.5
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
-    scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
+    scheduler = StepLR(optimizer, step_size=step_size, gamma=gamma)
 
+    # Training loop
     for epoch in range(max_epoch):
-        train(model, optimizer, img)
+        model.train_step(optimizer, img)
         scheduler.step()
 
-    denoised_img = denoise(model, img)
+    # Inference
+    model.eval()
+    with torch.no_grad():
+        denoised = img - model(img)
 
-    denoised = denoised_img.cpu().detach().numpy()[0, 0]
-    return denoised
+    return denoised.cpu().numpy()[0, 0]
 
 
-def denoise_2noise_scan(img):
+def denoise_ZSN2N_scan(img):
     de = np.zeros([img.shape[0], img.shape[1], img.shape[2]])
     for i in range(img.shape[-1]):
-        de[:, :, i] = denoise_2noise_img(img[:, :, i])
+        de[:, :, i] = denoise_ZSN2N_img(img[:, :, i])
     return np.array(de, "float32")
+
+
+def denoise_DIP_img(img, num_iter=1200, lr=0.01, input_depth=32):
+    # input_np: 2D array in [0,1]
+    img_np = np.array(img, "float32")
+    img_torch = np_to_torch(img_np)[None].cuda()
+
+    net = skip(input_depth, img_torch.shape[1],
+               num_channels_down=[128, 128, 128, 128],
+               num_channels_up=[128, 128, 128, 128],
+               num_channels_skip=[4, 4, 4, 4],
+               upsample_mode='bilinear').cuda()
+    # net.apply(lambda m: m.weight.data.normal_())
+
+    noise = get_noise(input_depth, 'noise', img_np.shape).cuda()
+
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr)
+
+    for i in range(num_iter):
+        optimizer.zero_grad()
+        out = net(noise)
+        loss = torch.nn.functional.mse_loss(out, img_torch)
+        loss.backward()
+        optimizer.step()
+        # if i % 500 == 0:
+        #     print(f"[{i}/{num_iter}] loss: {loss.item():.6f}")
+
+    out_np = out.detach().cpu().numpy()[0, 0]
+    return np.clip(out_np, 0, 1)
+
+
+def denoise_DIP_scan(volume, num_iter=600, lr=0.02, input_depth=32):
+    de = np.zeros([volume.shape[0], volume.shape[1], volume.shape[2]])
+    for i in range(volume.shape[-1]):
+        de[:, :, i] = denoise_DIP_img(volume[:, :, i], num_iter, lr, input_depth)
+    return np.array(de, "float32")
+
