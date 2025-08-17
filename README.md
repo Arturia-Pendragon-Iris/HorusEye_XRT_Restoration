@@ -23,7 +23,7 @@ You can also use the [analysis/evaluation.py](https://github.com/Arturia-Pendrag
 We provide detailed programs within the restoration_task folders. You can develop your own restoration models based on our provided codes.  
 
 ### Denoising with model-based/zero-shot methods
-We provide all the implementation of our compared baseline in [common_denoise.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/common_denoise.py). Example datasets are provided in the "example_dataset" folder.
+We provide all the implementation of our compared baseline in [common_denoise.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/common_denoise.py). Example datasets are provided in the "example_dataset" folder. We also provide a [Colab](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/Denoising_Illustration.ipynb) for detailed reference.
 
 ### Model-based iterative reconstruction methods
 We provide a detailed implementation of model-based iterative reconstruction (MBIR) methods. These methods first apply the Radon transform to the image, followed by MBIR techniques to achieve the final reconstruction results. The implementation can be found in the "[projection](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/projection)" folder. To use these methods, please ensure that both the ODL and ASTRA Toolbox packages are installed.
