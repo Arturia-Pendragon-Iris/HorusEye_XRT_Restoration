@@ -22,6 +22,17 @@ You can also use the [analysis/evaluation.py](https://github.com/Arturia-Pendrag
 ### Other restoration tasks
 We provide detailed programs within the restoration_task folders. You can develop your own restoration models based on our provided codes.  
 
+### Denoising with model-based/zero-shot methods
+We provide all the implementation of our compared baseline in [common_denoise.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/common_denoise.py). Example datasets are provided in the "example_dataset" folder.
+
+### Model-based iterative reconstruction methods
+We provide a detailed implementation of model-based iterative reconstruction (MBIR) methods. These methods first apply the Radon transform to the image, followed by MBIR techniques to achieve the final reconstruction results. The implementation can be found in the "[projection](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/projection)" folder. To use these methods, please ensure that both the ODL and ASTRA Toolbox packages are installed.
+```
+conda install conda-forge::odl
+conda install -c astra-toolbox -c nvidia astra-toolbox
+```
+
+
 ## Dose-comparison dataset
 You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1ihSIX5sFhNzvc0Whs6dXROyCFuQTaMvM?usp=sharing). The hyperlinks of other public datasets are provided in the Supplementary Note 1 presented in our Supplementary Information.
 
@@ -42,8 +53,8 @@ The project is inspired by the following projects:
 - [RED CNN](https://github.com/SSinyu/RED-CNN)
 - [CT Former](https://github.com/wdayang/CTformer)
 - [MAP NN](https://github.com/hmshan/MAP-NN)
-- [k-SVD](https://github.com/Deepayan137/K-svd)
-- [BM3D](https://github.com/Ryanshuai/BM3D_py)
+- [RAM](https://github.com/matthieutrs/ram)
+- [SGM](https://zenodo.org/records/10531170)
 
 We highly appreciate Dr. Jinwu Zhou, Chongxinan Pet Hospital, and Anhong Pet Hospital, Hefei for providing the animal CT scans.
 
