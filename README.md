@@ -18,7 +18,6 @@ For denoising tasks, please utilize [inference.py](https://github.com/Arturia-Pe
 Ensure that you replace the checkpoint path with your local checkpoint file. The inference process typically completes within a few seconds, yielding restored results.
 
 A pretrained checkpoint (trained on approximately 1 million images) is available for code testing purposes:
-
 [Download Pretrained Checkpoint](https://drive.google.com/file/d/1D5mhuJNszGElek5n10F8fUhvg1bA1S7f/view?usp=sharing). 
 
 ### Denoising with model-based/zero-shot methods
