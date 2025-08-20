@@ -7,10 +7,10 @@ from monai.networks.nets import SwinUNETR
 
 
 class SwinUNet(nn.Module):
-    def __init__(self, feature_ch=96, final_ch=3):
+    def __init__(self, in_ch=3, feature_ch=96, final_ch=1):
         super(SwinUNet, self).__init__()
         self.swin = SwinUNETR(img_size=(512, 512),
-                              in_channels=3,
+                              in_channels=in_ch,
                               out_channels=final_ch,
                               depths=[2, 2, 18, 2],
                               spatial_dims=2,
@@ -22,8 +22,12 @@ class SwinUNet(nn.Module):
             nn.Conv2d(final_ch, 1, kernel_size=3, stride=1, padding=1),
         )
 
-    def forward(self, x):
-        residual = x[:, 1]
+    def forward(self, x, do_residual=True):
+        residual = x
         F = self.swin(x)
         out = self.conv(F)
-        return out + residual
+        # print(out.shape)
+        if do_residual:
+            return out + residual[:, 1:2]
+        else:
+            return out
