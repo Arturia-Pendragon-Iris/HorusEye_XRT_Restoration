@@ -17,8 +17,6 @@ To predict your data, you can run [inference.py](https://github.com/Arturia-Pend
 
 We provide our previously pretrained checkpoint with only the base dataset (about 1 million images) for the code testing. You can download the checkpoint through the [link](https://drive.google.com/file/d/1D5mhuJNszGElek5n10F8fUhvg1bA1S7f/view?usp=sharing).
 
-You can also use the [analysis/evaluation.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/analysis/evaluation.py) to reproduce the quantitative results presented in our manuscript, including PSNR, SSIM, and FSC. 
-
 ### Other restoration tasks
 We provide detailed programs within the restoration_task folders. You can develop your own restoration models based on our provided codes.  
 
