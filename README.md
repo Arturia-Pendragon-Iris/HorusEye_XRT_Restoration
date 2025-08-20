@@ -4,6 +4,7 @@ This is the official repository of "HorusEye: A self-supervised foundation model
 King Abdullah University of Science and Technology, KAUST
 
 ## Installation
+To prepare the environment, execute the following commands:
 ```
 conda create -n HorusEye python==3.10
 conda install pytorch torchvision torchaudio pytorch-cuda=12.1 -c pytorch -c nvidia
@@ -12,10 +13,12 @@ pip install monai
 ```
 
 ## Predict
-### Denoising prediction
-To predict your data, you can run [inference.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/inference.py) by giving a normalized 2D image (predict_denoised_slice) or image volume (predict_denoised_volume) and replacing the checkpoint path with your local path. The program will run for several seconds and output the restored results. 
+### Denoising Prediction
+For denoising tasks, please utilize [inference.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/inference.py).
+Ensure that you replace the checkpoint path with your local checkpoint file. The inference process typically completes within a few seconds, yielding restored results.
 
-We provide our previously pretrained checkpoint with only the base dataset (about 1 million images) for the code testing. You can download the checkpoint through the [link](https://drive.google.com/file/d/1D5mhuJNszGElek5n10F8fUhvg1bA1S7f/view?usp=sharing).
+A pretrained checkpoint (trained on approximately 1 million images) is available for code testing purposes:
+[Download Pretrained Checkpoint](https://drive.google.com/file/d/1D5mhuJNszGElek5n10F8fUhvg1bA1S7f/view?usp=sharing).
 
 ### Other restoration tasks
 We provide detailed programs within the restoration_task folders. You can develop your own restoration models based on our provided codes.  
