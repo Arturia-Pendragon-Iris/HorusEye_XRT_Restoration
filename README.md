@@ -34,7 +34,19 @@ conda install -c astra-toolbox -c nvidia astra-toolbox
 
 ## Datasets
 ### Example clean images
-In the ["example_dataset"](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/example_dataset) folder, we have shared 50 clean CT images. These images can be used to validate the denoising performances with the synthesized noisy images with log_poission noise. 
+In the ["example_dataset"](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/example_dataset) folder, we have shared 50 clean CT images. These images can be used to validate the denoising performances with the synthesized noisy images with log_poission noise. All the images have veen rescaled to [0, 1].
+'''
+img = np.load("../example_dataset/001.npy")
+
+astra_proj_geom, astra_vol_geom, astra_proj_clean = simulate_noisy_proj_astra(img, noise=True, num_angles=270)
+noisy_recon = FBP_ASTRA(astra_proj_geom, astra_vol_geom, astra_proj_clean)
+'''
+Here "noisy_recon" is the stnthesized noisy image. After restoration, you can compare the restored image with the raw image using our provided evaluation code.
+'''
+from analysis.evaluation import compare_img
+
+psnr, ssim, nmse, nmae = compare_img(img, restored)
+'''
 
 ### Dose-comparison dataset
 You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1ihSIX5sFhNzvc0Whs6dXROyCFuQTaMvM?usp=sharing). The hyperlinks of other public datasets are provided in the Supplementary Note 1 presented in our Supplementary Information.
