@@ -32,9 +32,12 @@ conda install conda-forge::odl
 conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
 
-
-## Dose-comparison dataset
+## Datasets
+### Example clean images
 You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1ihSIX5sFhNzvc0Whs6dXROyCFuQTaMvM?usp=sharing). The hyperlinks of other public datasets are provided in the Supplementary Note 1 presented in our Supplementary Information.
+
+### Dose-comparison dataset
+In the ["example_dataset"](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/example_dataset) folder, we have shared 50 clean CT images. These images can be used to validate the denoising performances with the synthesized noisy images with log_poission noise. 
 
 ## HorusEye schematic and development
 ![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/fig_1.png)
