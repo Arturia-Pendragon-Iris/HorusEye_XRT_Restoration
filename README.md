@@ -14,35 +14,50 @@ pip install monai
 
 ## Predict
 ### Denoising Prediction
-For denoising tasks, please utilize [inference.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/inference.py).
+For denoising tasks, please utilize [inference.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/inference.py) and run the "predict_denoised_slice" for 2D image prediction: .
 Ensure that you replace the checkpoint path with your local checkpoint file. The inference process typically completes within a few seconds, yielding restored results.
 
 A pretrained checkpoint (trained on approximately 1 million images) is available for code testing purposes:
-[Download Pretrained Checkpoint](https://drive.google.com/file/d/1D5mhuJNszGElek5n10F8fUhvg1bA1S7f/view?usp=sharing).
 
-### Other restoration tasks
-We provide detailed programs within the restoration_task folders. You can develop your own restoration models based on our provided codes.  
+[Download Pretrained Checkpoint](https://drive.google.com/file/d/1D5mhuJNszGElek5n10F8fUhvg1bA1S7f/view?usp=sharing). 
 
 ### Denoising with model-based/zero-shot methods
-We provide all the implementation of our compared baseline in [common_denoise.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/common_denoise.py). Example datasets are provided in the "example_dataset" folder. We also provide a [Colab](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/Denoising_Illustration.ipynb) for detailed reference.
+We provide baseline implementations for model-based and zero-shot denoising in [common_denoise.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/common_denoise.py). 
+- Example datasets are available in the ["example_dataset"](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/example_dataset) folder.
+- A comprehensive Colab illustration is provided here: [Colab](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/Denoising_Illustration.ipynb).
 
 ### Model-based iterative reconstruction methods
-We provide a detailed implementation of model-based iterative reconstruction (MBIR) methods. These methods first apply the Radon transform to the image, followed by MBIR techniques to achieve the final reconstruction results. The implementation can be found in the "[projection](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/projection)" folder. To use these methods, please ensure that both the ODL and ASTRA Toolbox packages are installed.
+We offer detailed implementations of model-based iterative reconstruction (MBIR) methods.
+These methods apply the Radon transform followed by iterative MBIR techniques to achieve high-quality reconstructions.
+
+The implementation is provided in the [projection](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/projection) folder.
+
+To employ MBIR methods, install the following dependencies:
 ```
 conda install conda-forge::odl
 conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
 
+### Other restoration tasks
+Additional restoration tasks are available in the [restoration_task](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/restoration_task) folders. Users may also develop novel restoration models upon the provided codebase.
+
+
 ## Datasets
 ### Example clean images
-In the ["example_dataset"](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/example_dataset) folder, we have shared 50 clean CT images. These images can be used to validate the denoising performances with the synthesized noisy images with log_poission noise. All the images have veen rescaled to [0, 1].
+In the [example_dataset](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/example_dataset), 50 clean CT images are provided. These images serve as validation data for evaluating denoising performance against synthesized noisy images generated with log-Poisson noise.
+
+All images are normalized within the range [0, 1].
+Example usage:
+
 '''
 img = np.load("../example_dataset/001.npy")
 
 astra_proj_geom, astra_vol_geom, astra_proj_clean = simulate_noisy_proj_astra(img, noise=True, num_angles=270)
 noisy_recon = FBP_ASTRA(astra_proj_geom, astra_vol_geom, astra_proj_clean)
 '''
-Here "noisy_recon" is the stnthesized noisy image. After restoration, you can compare the restored image with the raw image using our provided evaluation code.
+Here, noisy_recon denotes the synthesized noisy image.
+
+After restoration, performance can be compared against the original image using the provided evaluation code:
 '''
 from analysis.evaluation import compare_img
 
@@ -50,7 +65,9 @@ psnr, ssim, nmse, nmae = compare_img(img, restored)
 '''
 
 ### Dose-comparison dataset
-You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1ihSIX5sFhNzvc0Whs6dXROyCFuQTaMvM?usp=sharing). The hyperlinks of other public datasets are provided in the Supplementary Note 1 presented in our Supplementary Information.
+You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1ihSIX5sFhNzvc0Whs6dXROyCFuQTaMvM?usp=sharing). 
+
+Hyperlinks to other public datasets are provided in Supplementary Note 1 of the Supplementary Information.
 
 ## HorusEye schematic and development
 ![](https://github.com/Arturia-Pendragon-Iris/HorusEye/blob/main/figures/fig_1.png)
