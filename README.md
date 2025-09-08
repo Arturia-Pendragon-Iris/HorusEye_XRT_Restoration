@@ -48,20 +48,22 @@ In the [example_dataset](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_
 All images are normalized within the range [0, 1].
 Example usage:
 
-'''
+```
 img = np.load("../example_dataset/001.npy")
 
 astra_proj_geom, astra_vol_geom, astra_proj_clean = simulate_noisy_proj_astra(img, noise=True, num_angles=270)
 noisy_recon = FBP_ASTRA(astra_proj_geom, astra_vol_geom, astra_proj_clean)
-'''
+```
+
 Here, noisy_recon denotes the synthesized noisy image.
 
 After restoration, performance can be compared against the original image using the provided evaluation code:
-'''
+
+```
 from analysis.evaluation import compare_img
 
 psnr, ssim, nmse, nmae = compare_img(img, restored)
-'''
+```
 
 ### Dose-comparison dataset
 You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1ihSIX5sFhNzvc0Whs6dXROyCFuQTaMvM?usp=sharing). 
