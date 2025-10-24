@@ -1,5 +1,5 @@
 # HorusEye for generalizable X-ray tomography restoration
-This is the official repository of "HorusEye: A self-supervised foundation model for generalizable X-ray tomography restoration" by Yuetan Chu , Longxi Zhou , Gongning Luo , Kai Kang , Suyu Dong , Zhongyi Han , Lianming Wu , Xianglin Meng , Changchun Yang , Xin Guo , Yuan Cheng , Yuan Qi , Xin Liu , Dexuan Xie , Ricardo Henao , Anthony Capone , Xigang Xiao , Shaodong Cao , Gianluca Setti , Zhaowen Qiu, and Xin Gao.
+This is the official repository of "HorusEye: A self-supervised foundation model for generalizable X-ray tomography restoration" by Yuetan Chu , Longxi Zhou , Gongning Luo , Kai Kang , Suyu Dong , Zhongyi Han , Lianming Wu , Xianglin Meng , Changchun Yang , Xin Guo , Yuan Cheng , Yuan Qi , Xin Liu , Dexuan Xie , Ricardo Henao , Xigang Xiao , Shaodong Cao , Gianluca Setti , Zhaowen Qiu, and Xin Gao.
 
 King Abdullah University of Science and Technology, KAUST
 
