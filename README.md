@@ -14,7 +14,7 @@ pip install monai
 
 ## Predict
 ### Denoising Prediction
-For denoising tasks, please utilize [inference.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/inference.py) and run the "predict_denoised_slice" for 2D image prediction: .
+For denoising tasks, please utilize [inference.py](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/blob/main/inference.py) and run the "predict_denoised_slice" for 2D image prediction.
 Ensure that you replace the checkpoint path with your local checkpoint file. The inference process typically completes within a few seconds, yielding restored results.
 
 A pretrained checkpoint (trained on approximately 1 million images) is available for code testing purposes:
