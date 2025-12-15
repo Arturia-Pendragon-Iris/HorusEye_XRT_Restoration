@@ -61,6 +61,7 @@ python separate_ImageNet.py \
   --doc AapmCT_10C \
   --test \
   --image_folder output
+```
 
 
 ### Other restoration tasks
