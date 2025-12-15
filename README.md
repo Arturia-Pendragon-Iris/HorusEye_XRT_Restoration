@@ -44,14 +44,12 @@ The original implementation is available at:
 https://zenodo.org/record/8266123
 
 ---
-
-## Requirements and Dependencies
+Requirements and Dependencies
 
 Please refer to `requirements.txt` for detailed environment configuration and dependency settings.
 
 ---
-
-## Testing
+Testing
 
 To run the test phase for SGM-based reconstruction, execute the following command:
 
