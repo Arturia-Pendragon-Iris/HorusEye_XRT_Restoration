@@ -46,7 +46,7 @@ https://zenodo.org/record/8266123
 ---
 Requirements and Dependencies
 
-Please refer to `requirements.txt` for detailed environment configuration and dependency settings.
+Please refer to `requirements.txt` for detailed environment configuration and dependency settings. The checkpoint should be downloaded from the original link.
 
 ---
 Testing
