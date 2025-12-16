@@ -24,7 +24,7 @@ def simulate_noisy_proj_odl(img, I0=1e5, num_angles=360, detector_count=984, noi
     odl_geometry = odl.tomo.Parallel2dGeometry(
         odl_angle_partition, odl_detector_partition
     )
-
+ 
     odl_ray_trafo = odl.tomo.RayTransform(
         odl_reco_space, odl_geometry, impl='astra_cpu'
     )
