@@ -36,6 +36,33 @@ To employ MBIR methods, install the following dependencies:
 conda install conda-forge::odl
 conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
+### Reproduction of SGM-based reconstruction method
+We cloned and integrated the official code from the paper  
+**“Wavelet-improved score-based generative model for medical imaging”**  
+to enable a direct reproduction of the SGM-based reconstruction approach.
+The original implementation is available at:  
+https://zenodo.org/record/8266123
+
+---
+Requirements and Dependencies
+
+Please refer to `requirements.txt` for detailed environment configuration and dependency settings.
+
+---
+Testing
+
+To run the test phase for SGM-based reconstruction, execute the following command:
+
+```bash
+python separate_ImageNet.py \
+  --model ncsn \
+  --runner Aapm_Runner_CTtest_10_noconv \
+  --config aapm_10C.yml \
+  --doc AapmCT_10C \
+  --test \
+  --image_folder output
+```
+
 
 ### Other restoration tasks
 Additional restoration tasks are available in the [restoration_task](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/restoration_task) folders. Users may also develop novel restoration models upon the provided codebase.
