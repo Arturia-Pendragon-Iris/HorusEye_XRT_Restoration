@@ -26,7 +26,7 @@ def simulate_noisy_proj_odl(img, I0=1e5, num_angles=360, detector_count=984, noi
     )
 
     odl_ray_trafo = odl.tomo.RayTransform(
-        odl_reco_space, odl_geometry, impl='astra_cuda'
+        odl_reco_space, odl_geometry, impl='astra_cpu'
     )
 
     odl_proj_data = odl_ray_trafo(odl_phantom)
