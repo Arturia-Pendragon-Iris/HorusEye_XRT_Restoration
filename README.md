@@ -3,6 +3,9 @@ This is the official repository of "HorusEye: A self-supervised foundation model
 
 King Abdullah University of Science and Technology, KAUST
 
+Our manuscript has been accepted in Nature Computational Science. The original manuscript can be found at [here](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/Manuscript).
+
+
 ## Installation
 To prepare the environment, execute the following commands:
 ```
