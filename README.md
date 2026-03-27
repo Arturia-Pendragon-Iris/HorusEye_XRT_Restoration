@@ -95,9 +95,6 @@ from analysis.evaluation import compare_img
 psnr, ssim, nmse, nmae = compare_img(img, restored)
 ```
 
-### Dose-comparison dataset
-You can access the dose-comparison datasets through the [link](https://drive.google.com/drive/folders/1ihSIX5sFhNzvc0Whs6dXROyCFuQTaMvM?usp=sharing). 
-
 Hyperlinks to other public datasets are provided in Supplementary Note 1 of the Supplementary Information.
 
 ## HorusEye schematic and development
