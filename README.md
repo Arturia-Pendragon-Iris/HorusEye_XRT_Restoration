@@ -135,6 +135,20 @@ You can download the example datasets to test our model.
 - [Battery Pouch Cell with Defects](https://zenodo.org/records/8189323)
 - [TomoBank](https://tomobank.readthedocs.io/en/latest/)
 
+## Cite
+
+If you use this work, please cite:
+
+```bibtex
+@article{chu2026horuseye,
+  title   = {HorusEye: a self-supervised foundation model for generalizable X-ray tomography restoration},
+  author  = {Chu, Y. and Zhou, L. and Luo, G. and others},
+  journal = {Nature Computational Science},
+  year    = {2026},
+  doi     = {10.1038/s43588-026-00973-3}
+}
+
+
 
 ## License
 This project is covered under the Apache 2.0 License.
