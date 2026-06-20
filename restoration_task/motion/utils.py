@@ -46,18 +46,18 @@ class TrainSetLoader_motion(Dataset):
         mu1 = np.random.uniform(low=0, high=1)
         mu2 = np.random.uniform(low=0, high=1)
 
-        amplitude = np.random.uniform(low=1, high=5, size=(1, 2))
-        fre = np.random.randint(low=1, high=3, size=(1, 2))
-        trans = np.random.uniform(low=1, high=5, size=(1, 2))
-        rotate = np.random.uniform(low=0.5, high=2.5, size=(1, 2))
+        amplitude = np.random.uniform(low=1, high=5, size=(2,))
+        fre = np.random.randint(low=1, high=3, size=(2,))
+        trans = float(np.random.uniform(low=1, high=5))
+        rotate = float(np.random.uniform(low=0.5, high=2.5))
         if mu1 < 0.5:
-            motion_img = generate_grid_motion(np_array, trans, rotate)
+            motion_img = generate_grid_motion(np_array, max_translation=trans, max_rotation=rotate)
             if mu2 < 0.5:
-                motion_img = generate_nongrid_motion(motion_img, amplitude, fre)
+                motion_img = generate_nongrid_motion(motion_img, amplitude=tuple(amplitude), frequency=tuple(fre))
         else:
-            motion_img = generate_nongrid_motion(np_array, amplitude, fre)
+            motion_img = generate_nongrid_motion(np_array, amplitude=tuple(amplitude), frequency=tuple(fre))
             if mu2 > 0.5:
-                motion_img = generate_grid_motion(motion_img, trans, rotate)
+                motion_img = generate_grid_motion(motion_img, max_translation=trans, max_rotation=rotate)
 
         gt = torch.tensor(np_array[np.newaxis]).to(torch.float).cuda()
         motion_img = torch.tensor(np.stack([motion_img] * 3, axis=0)).to(torch.float).cuda()

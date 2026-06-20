@@ -1,5 +1,3 @@
-import itertools
-from collections.abc import Sequence
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,8 +7,7 @@ from monai.networks.nets import SwinUNETR
 class SwinUNet(nn.Module):
     def __init__(self, in_ch=3, feature_ch=96, final_ch=1):
         super(SwinUNet, self).__init__()
-        self.swin = SwinUNETR(img_size=(512, 512),
-                              in_channels=in_ch,
+        self.swin = SwinUNETR(in_channels=in_ch,
                               out_channels=final_ch,
                               depths=[2, 2, 18, 2],
                               spatial_dims=2,

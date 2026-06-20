@@ -1,6 +1,6 @@
 import numpy as np
 from skimage.metrics import structural_similarity, peak_signal_noise_ratio
-from skimage.morphology import skeletonize_3d
+from skimage.morphology import skeletonize
 from skimage.measure import label
 from sklearn.metrics import roc_auc_score, accuracy_score, f1_score
 import math

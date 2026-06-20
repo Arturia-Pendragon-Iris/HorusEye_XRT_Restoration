@@ -38,8 +38,7 @@ class TrainSetLoader_thickness(Dataset):
         self.file_list = glob.glob((os.path.join(self.dataset_dir, "*.npz")))
 
     def __getitem__(self, index):
-        # print(self.file_list[index])
-        np_array = np.load(os.path.join(self.dataset_dir, self.file_list[index]))["arr_0"]
+        np_array = np.load(self.file_list[index])["arr_0"]
         np_array = train_transforms(np_array)
         raw = torch.tensor(np_array[0:15]).cuda().to(torch.float)
         down = torch.tensor(np_array[15:]).cuda().to(torch.float)

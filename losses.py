@@ -1,7 +1,7 @@
-import torch.nn as nn
 import torch
-import numpy as np
+import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 class GetSobel(nn.Module):
     def __init__(self):
@@ -119,11 +119,10 @@ def ln_loss(prediction_results, ground_truth):
 
 def sharp_loss(prediction_results, ground_truth):
     loss_1 = nn.L1Loss()
+    device = prediction_results.device
 
-    get_grad = Getgradientnopadding().cuda()
-    get_sobel = GetSobel().cuda()
-    get_laplace = GetLaplace().cuda()
-    get_high = GetHighPass().cuda()
+    get_grad = Getgradientnopadding().to(device)
+    get_sobel = GetSobel().to(device)
 
     loss = 0
     loss += loss_1(get_grad(prediction_results), get_grad(ground_truth))

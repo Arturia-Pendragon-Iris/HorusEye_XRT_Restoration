@@ -1,0 +1,41 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model checkpoints (large binaries; download from Zenodo)
+training_repro/checkpoints/
+*.pth
+*.pt
+*.ckpt
+
+# Claude Code local settings
+.claude/
+
+# Temporary
+temp*.py
+*.tmp

@@ -5,15 +5,11 @@ from skimage.restoration import (
     denoise_nl_means,
     estimate_sigma,
 )
-import pywt
 from sklearn.feature_extraction import image
-from ksvd import ApproximateKSVD
-from analysis.filter.filter_2D import gaussian_filter
-import cv2
-from bm3d import bm3d, BM3DProfile
-import numpy as np
 from sklearn import linear_model
 from scipy.ndimage import gaussian_filter, sobel
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -22,7 +18,24 @@ from torch.optim.lr_scheduler import StepLR
 import tqdm
 from DIP.utils.common_utils import get_noise, get_image, np_to_torch
 from DIP.models.skip import skip
-import prox_tv as ptv
+
+try:
+    import pywt
+    _HAS_PYWT = True
+except ImportError:
+    _HAS_PYWT = False
+
+try:
+    from ksvd import ApproximateKSVD
+    _HAS_KSVD = True
+except ImportError:
+    _HAS_KSVD = False
+
+try:
+    from bm3d import bm3d, BM3DProfile
+    _HAS_BM3D = True
+except ImportError:
+    _HAS_BM3D = False
 
 cv2.setUseOptimized(True)
 
@@ -75,8 +88,8 @@ def denoise_atv_img(image, alpha0=0.05, weight_range=(1e-4, 0.1), tol=1e-6, max_
 
 
 def denoise_bila_img(img):
-    de = denoise_bilateral(img[np.newaxis], sigma_color=0.05, sigma_spatial=15, channel_axis=0)
-    return de[0]
+    de = denoise_bilateral(img, sigma_color=0.05, sigma_spatial=15)
+    return de
 
 
 def denoise_wave_img(img):
@@ -87,7 +100,7 @@ def denoise_wave_img(img):
 def denoise_wave_scan(img):
     de = np.zeros([img.shape[0], img.shape[1], img.shape[2]])
     for i in range(img.shape[-1]):
-        de[:, :, i] = denoise_wave(img[:, :, i])
+        de[:, :, i] = denoise_wave_img(img[:, :, i])
     return np.array(de, "float32")
 
 
@@ -160,6 +173,8 @@ class KSVD(object):
 
 
 def denoise_ksvd_img(img):
+    if not _HAS_KSVD:
+        raise ImportError("ksvd is required: pip install ksvd")
     patch_size = (5, 5)
     patches = image.extract_patches_2d(img, patch_size)
     signals = patches.reshape(patches.shape[0], -1)
@@ -171,11 +186,12 @@ def denoise_ksvd_img(img):
     reduced = gamma.dot(dictionary) + mean
     reduced_img = image.reconstruct_from_patches_2d(
         reduced.reshape(patches.shape), img.shape)
-
     return reduced_img
 
 
 def denoise_ksvd_2_img(img, patch_size=(5, 5), n_components=32, n_nonzero=5):
+    if not _HAS_KSVD:
+        raise ImportError("ksvd is required: pip install ksvd")
     patches = image.extract_patches_2d(img, patch_size)
     signals = patches.reshape(patches.shape[0], -1).astype(np.float32)
     mean = np.mean(signals, axis=1)[:, np.newaxis]
@@ -188,7 +204,6 @@ def denoise_ksvd_2_img(img, patch_size=(5, 5), n_components=32, n_nonzero=5):
     gamma = aksvd.transform(signals)
     reduced = gamma.dot(dictionary) + mean
     reduced_img = image.reconstruct_from_patches_2d(reduced.reshape(patches.shape), img.shape)
-
     return reduced_img
 
 
@@ -323,6 +338,9 @@ class BM3D:
 
 
 def denoise_bm3d_img(img):
+    if not _HAS_BM3D or not _HAS_PYWT:
+        raise ImportError("bm3d and pywt are required: pip install bm3d PyWavelets")
+
     def estimate_sigma_mad(image):
         coeffs = pywt.dwt2(image, 'db1')
         _, (cH, cV, cD) = coeffs
@@ -330,11 +348,14 @@ def denoise_bm3d_img(img):
         sigma_est = np.median(np.abs(high_freq)) / 0.6745
         return sigma_est
 
-    print(estimate_sigma_mad(img))
-    return bm3d(img, sigma_psd=estimate_sigma_mad(img))
+    sigma = estimate_sigma_mad(img)
+    print(f"Estimated sigma: {sigma:.4f}")
+    return bm3d(img, sigma_psd=sigma)
 
 
 def denoise_bm3d_img_2(img, var=0.05):
+    if not _HAS_BM3D:
+        raise ImportError("bm3d is required: pip install bm3d")
     return bm3d(img, sigma_psd=var)
 
 
