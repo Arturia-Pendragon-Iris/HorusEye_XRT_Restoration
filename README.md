@@ -3,7 +3,7 @@
 Official repository for **"HorusEye: A self-supervised foundation model for generalizable X-ray tomography restoration"**,
 published in *Nature Computational Science* (2026).
 
-**Authors:** Yuetan Chu, Longxi Zhou, Gongning Luo, Kai Kang, Suyu Dong, Zhongyi Han, Lianming Wu, Xianglin Meng, Changchun Yang, Xin Guo, Yuan Cheng, Yuan Qi, Xin Liu, Dexuan Xie, Ricardo Henao, Xigang Xiao, Shaodong Cao, Gianluca Setti, Zhaowen Qiu, and Xin Gao — *King Abdullah University of Science and Technology (KAUST)*
+**Authors:** Yuetan Chu, Longxi Zhou, Gongning Luo, Kai Kang, Suyu Dong, Zhongyi Han, Lianming Wu, Xianglin Meng, Changchun Yang, Xin Guo, Yuan Cheng, Yuan Qi, Xin Liu, Dexuan Xie, Ricardo Henao, Xigang Xiao, Shaodong Cao, Gianluca Setti, Zhaowen Qiu, and Xin Gao
 
 > **Paper:** [Nature Computational Science](https://www.nature.com/articles/s43588-026-00973-3) · **Manuscript PDF:** [Main text](Manuscript/Main_text.pdf) · [Supplementary](Manuscript/Supplementary_Information.pdf)
 
