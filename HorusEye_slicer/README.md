@@ -58,21 +58,3 @@ The original inference snippet expects:
 ```
 
 For this Slicer demo, the checkpoint path is configurable in the UI. Select `HorusEye_demo.pth` or another checkpoint compatible with `SwinUNet(in_ch=3)`.
-
-## Smoke Test
-
-Smoke test mode skips the neural network and applies a tiny 3x3 mean filter. It is only intended to verify DICOM reading, windowing, output writing, and Slicer loading.
-
-Command-line example:
-
-```powershell
-& %USERPROFILE%\miniconda3\envs\arturia_v1\python.exe `
-  <repo-root>\DICOMDenoiseDemo\denoise_inference.py `
-  --input-dicom path\to\slice.dcm `
-  --output-dir <repo-root>\denoise_smoke_outputs `
-  --window-width 400 `
-  --window-level 40 `
-  --smoke-test
-```
-
-Smoke-test output is not a real denoising result.
