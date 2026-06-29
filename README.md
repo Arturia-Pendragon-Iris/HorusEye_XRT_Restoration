@@ -105,7 +105,7 @@ psnr, ssim, nmse, nmae = compare_img(img_clean, img_restored)
 print(f"PSNR: {psnr:.2f}  SSIM: {ssim:.4f}  NMSE: {nmse:.4f}")
 ```
 
-## Slicer demo
+### Slicer demo
 We also include a minimal 3D Slicer demo for single-slice DICOM CT denoising. See [`DICOMDenoiseDemo`](https://github.com/Arturia-Pendragon-Iris/HorusEye_XRT_Restoration/tree/main/HorusEye_slicer) for the Slicer module, external inference runner, and usage instructions.
 
 ---
